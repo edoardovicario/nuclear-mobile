@@ -11,7 +11,9 @@ import {
   SettingsIcon,
   UserIcon,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { platform } from '@tauri-apps/plugin-os';
+import './mobile-layout.css';
 
 import { useTranslation } from '@nuclearplayer/i18n';
 import {
@@ -43,6 +45,16 @@ import { useSettingsModalStore } from '../stores/settingsModalStore';
 import { useStartupStore } from '../stores/startupStore';
 
 const RootComponent = () => {
+  const [narrow, setNarrow] = useState(() => window.matchMedia('(max-width: 760px)').matches);
+  const [panel, setPanel] = useState<'content' | 'navigation' | 'queue'>('content');
+  const mobile = platform() === 'android' || platform() === 'ios';
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 760px)');
+    const update = () => setNarrow(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  const compact = narrow || mobile;
   const { t } = useTranslation('navigation');
   const { t: tPrefs } = useTranslation('preferences');
   const {
@@ -56,27 +68,12 @@ const RootComponent = () => {
   const openSettings = useSettingsModalStore((state) => state.open);
   const isStartingUp = useStartupStore((state) => state.isStartingUp);
   useEffect(() => {
+    if (mobile) return;
     const window = getCurrentWindow();
-    window.show().then(() => window.setFocus());
-  }, []);
-  return (
-    <PlayerShell onContextMenu={(e) => e.preventDefault()}>
-      <GlobalShortcuts />
-      <div>
-        <ConnectedTitleBar />
-        <FlatpakWarningBanner />
-        <ConnectedTopBar />
-      </div>
-      {!isStartingUp && <StreamResolver />}
-      <SoundProvider>
-        <PlayerWorkspace>
-          <PlayerWorkspace.LeftSidebar
-            width={leftSidebar.width}
-            isCollapsed={leftSidebar.isCollapsed}
-            onWidthChange={setLeftSidebarWidth}
-            onToggle={toggleLeftSidebar}
-          >
-            <SidebarNavigation isCompact={leftSidebar.isCollapsed}>
+    void window.show().then(() => window.setFocus());
+  }, [mobile]);
+  const navigation = (
+            <SidebarNavigation isCompact={compact ? false : leftSidebar.isCollapsed}>
               <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
                 <SidebarNavigationItem
                   to="/dashboard"
@@ -126,6 +123,44 @@ const RootComponent = () => {
                 onClick={() => openSettings()}
               />
             </SidebarNavigation>
+  );
+  return (
+    <PlayerShell className={compact ? 'nuclear-mobile-shell' : undefined} onContextMenu={(e) => e.preventDefault()}>
+      <GlobalShortcuts />
+      <div>
+        {!mobile && <ConnectedTitleBar />}
+        {!mobile && <FlatpakWarningBanner />}
+        <ConnectedTopBar />
+      </div>
+      {!isStartingUp && <StreamResolver />}
+      <SoundProvider>
+        {compact ? (
+          <div className="nuclear-mobile-workspace">
+            <nav className="nuclear-mobile-nav" aria-label={t('dashboard')}>
+              <button type="button" aria-pressed={panel === 'navigation'} onClick={() => setPanel(panel === 'navigation' ? 'content' : 'navigation')}>☰</button>
+              <button type="button" aria-pressed={panel === 'content'} onClick={() => setPanel('content')}>{t('dashboard')}</button>
+              <button type="button" aria-pressed={panel === 'queue'} onClick={() => setPanel(panel === 'queue' ? 'content' : 'queue')}>♫</button>
+            </nav>
+            <div className="nuclear-mobile-content" hidden={panel !== 'content'}>
+              <PlayerWorkspace.Main><RouteTransition /></PlayerWorkspace.Main>
+            </div>
+            <div hidden={panel !== 'navigation'} className="nuclear-mobile-panel" onClick={e => {
+              if ((e.target as HTMLElement).closest('a')) setPanel('content');
+            }}>{navigation}</div>
+            <div hidden={panel !== 'queue'} className="nuclear-mobile-panel">
+              <QueueHeaderActions />
+              <ConnectedQueuePanel isCollapsed={false} />
+              <ConnectedStreamVerification />
+            </div>
+          </div>
+        ) : <PlayerWorkspace>
+          <PlayerWorkspace.LeftSidebar
+            width={leftSidebar.width}
+            isCollapsed={leftSidebar.isCollapsed}
+            onWidthChange={setLeftSidebarWidth}
+            onToggle={toggleLeftSidebar}
+          >
+            {navigation}
           </PlayerWorkspace.LeftSidebar>
 
           <PlayerWorkspace.Main>
@@ -142,7 +177,7 @@ const RootComponent = () => {
           >
             <ConnectedQueuePanel isCollapsed={rightSidebar.isCollapsed} />
           </PlayerWorkspace.RightSidebar>
-        </PlayerWorkspace>
+        </PlayerWorkspace>}
       </SoundProvider>
 
       <ConnectedPlayerBar />

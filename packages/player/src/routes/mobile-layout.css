@@ -1,0 +1,9 @@
+/* Responsive shell for the original player; no replacement catalogs or playback logic. */
+.nuclear-mobile-shell{height:100dvh;width:100%;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box}
+.nuclear-mobile-workspace{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.nuclear-mobile-nav{display:flex;gap:.5rem;justify-content:space-around;flex-shrink:0;padding:.25rem}
+.nuclear-mobile-nav button{min-height:44px;min-width:44px;padding:.5rem;cursor:pointer}
+.nuclear-mobile-nav button[aria-pressed=true]{text-decoration:underline;text-underline-offset:.3rem}
+.nuclear-mobile-content,.nuclear-mobile-panel{flex:1;min-height:0;overflow:auto}
+.nuclear-mobile-content>main{height:100%}
+.nuclear-mobile-content[hidden],.nuclear-mobile-panel[hidden]{display:none}
