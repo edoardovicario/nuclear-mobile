@@ -1,6 +1,7 @@
 import React from 'react';
 
 import App from './App';
+import { initMobileMediaSession } from './services/mobileMediaSession';
 import { isMobilePlatform } from './utils/isMobilePlatform';
 import { initLogStream } from './hooks/useLogStream';
 import { applyThemeFromSettingsIfAny } from './services/advancedThemeService';
@@ -68,6 +69,7 @@ export const initPlayerApp = async (
     .then(() => isMobilePlatform() ? initBridgeHandler() : initRemoteControl())
     .then(() => isMobilePlatform() ? undefined : initDiscordHandler())
     .then(() => initPlaybackEventBridge())
+    .then(() => { if (isMobilePlatform()) initMobileMediaSession(); })
     .then(() => initHistoryService())
     .then(() => initLanguage())
     .then(() => initThemes())

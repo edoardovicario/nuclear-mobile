@@ -36,12 +36,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+      - name: Install Android command-line tools
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
       - name: Configure Android SDK
         shell: bash
         run: |
-          set +o pipefail
-          yes | sdkmanager --licenses >/dev/null
-          set -o pipefail
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018"
           echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
       - run: pnpm install --frozen-lockfile

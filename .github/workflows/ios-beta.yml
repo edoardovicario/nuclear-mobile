@@ -1,0 +1,71 @@
+name: Nuclear iOS signed beta
+on:
+  workflow_dispatch:
+    inputs:
+      upload_to_testflight:
+        description: 'Upload the signed beta to App Store Connect (requires configured Apple account and explicit approval)'
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: read
+jobs:
+  signed-ios:
+    # Only the original port is eligible; never run with signing secrets on untrusted PRs.
+    if: github.ref == 'refs/heads/original-mobile'
+    runs-on: macos-15
+    environment: ios-beta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter '@nuclearplayer/player^...' build
+      - run: pnpm --filter @nuclearplayer/player tauri ios init --ci
+      - name: Verify credentials and provision ephemeral key
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -eu
+          if [ -z "$APPLE_API_KEY" ] || [ -z "$APPLE_API_ISSUER" ] || [ -z "$APPLE_API_PRIVATE_KEY" ] || [ -z "$APPLE_TEAM_ID" ]; then
+            echo "::error::Configure the Apple Developer secrets in the ios-beta environment first."
+            exit 1
+          fi
+          umask 077
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          keypath="$HOME/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY}.p8"
+          printf '%s' "$APPLE_API_PRIVATE_KEY" > "$keypath"
+          echo "APPLE_API_KEY_PATH=$keypath" >> "$GITHUB_ENV"
+      - name: Build signed iOS release
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: pnpm --filter @nuclearplayer/player tauri ios build --target aarch64 --export-method app-store-connect --build-number "$GITHUB_RUN_NUMBER" --ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuclear-ios-signed
+          path: packages/player/src-tauri/gen/apple/build/arm64/*.ipa
+          if-no-files-found: error
+      - name: Upload to App Store Connect
+        if: inputs.upload_to_testflight
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          set -eu
+          ipa=$(find packages/player/src-tauri/gen/apple/build/arm64 -maxdepth 1 -name '*.ipa' -print -quit)
+          test -n "$ipa"
+          xcrun altool --upload-app --type ios --file "$ipa" --apiKey "$APPLE_API_KEY" --apiIssuer "$APPLE_API_ISSUER"
+      - name: Remove temporary key
+        if: always()
+        run: |
+          if [ -n "${APPLE_API_KEY_PATH:-}" ]; then rm -f "$APPLE_API_KEY_PATH"; fi
