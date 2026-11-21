@@ -1,3 +1,4 @@
+import { isMobilePlatform } from '../utils/isMobilePlatform';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -77,6 +78,7 @@ const showDownloadToast = (event: DownloadEvent) => {
 
 export const useYtdlpDownload = () => {
   useEffect(() => {
+    if (isMobilePlatform()) return;
     const cleanup = new AbortController();
     const unlistening = listen<DownloadEvent>(YTDLP_DOWNLOAD_EVENT, (event) =>
       showDownloadToast(event.payload),

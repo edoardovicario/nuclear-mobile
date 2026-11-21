@@ -11,3 +11,6 @@ This branch starts from the unmodified upstream Nuclear 1.56.4 source, not from 
 - Keep AGPL source and upstream attribution. Do not claim feature parity until validated.
 
 The previous pwa and mobile-port branches are separate experiments, not equivalent versions of Nuclear.
+
+## Second milestone
+Desktop-only plugins are guarded, the original streaming/provider code is preserved, and mobile CI compiles the original player. Discord IPC and standalone yt-dlp explicitly report unavailable on mobile. No replacement providers, no claim of full parity or playable builds. Native background controls, provider compatibility, device tests and iOS signing still remain. Android debug artifact is installable only after successful build; iOS simulator output is not a signed iPhone app.

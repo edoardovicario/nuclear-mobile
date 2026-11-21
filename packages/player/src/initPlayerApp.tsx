@@ -1,6 +1,7 @@
 import React from 'react';
 
 import App from './App';
+import { isMobilePlatform } from './utils/isMobilePlatform';
 import { initLogStream } from './hooks/useLogStream';
 import { applyThemeFromSettingsIfAny } from './services/advancedThemeService';
 import { startAdvancedThemeWatcher } from './services/advancedThemeWatcher';
@@ -53,7 +54,7 @@ const initThemes = () =>
 
 const startBackgroundTasks = () => {
   void hydratePluginsFromRegistry();
-  void useUpdaterStore.getState().checkForUpdate();
+  if (!isMobilePlatform()) void useUpdaterStore.getState().checkForUpdate();
 };
 
 export const initPlayerApp = async (
@@ -64,8 +65,8 @@ export const initPlayerApp = async (
   await initializeStores()
     .then(() => registerBuiltInCoreSettings())
     .then(() => initDiscoveryService())
-    .then(() => initRemoteControl())
-    .then(() => initDiscordHandler())
+    .then(() => isMobilePlatform() ? initBridgeHandler() : initRemoteControl())
+    .then(() => isMobilePlatform() ? undefined : initDiscordHandler())
     .then(() => initPlaybackEventBridge())
     .then(() => initHistoryService())
     .then(() => initLanguage())

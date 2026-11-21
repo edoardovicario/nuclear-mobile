@@ -1,0 +1,24 @@
+{
+  "productName": "Nuclear Mobile",
+  "identifier": "com.edoardovicario.nuclearmobile",
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Nuclear Mobile",
+        "width": 430,
+        "height": 850,
+        "maximized": false,
+        "resizable": true,
+        "fullscreen": false,
+        "visible": true
+      }
+    ]
+  },
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "iOS": {
+      "minimumSystemVersion": "15.0"
+    }
+  }
+}

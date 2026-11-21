@@ -1,0 +1,24 @@
+{
+  "identifier": "reveal-desktop",
+  "platforms": [
+    "macOS",
+    "linux",
+    "windows"
+  ],
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    {
+      "identifier": "opener:allow-reveal-item-in-dir",
+      "allow": [
+        {
+          "path": "$APPLOG"
+        },
+        {
+          "path": "$APPLOG/**"
+        }
+      ]
+    }
+  ]
+}

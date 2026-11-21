@@ -1,5 +1,4 @@
 {
-  "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "enables the default permissions",
   "windows": [
@@ -152,16 +151,6 @@
     "store:default",
     "upload:default",
     "opener:default",
-    {
-      "identifier": "opener:allow-reveal-item-in-dir",
-      "allow": [
-        {
-          "path": "$APPLOG"
-        },
-        {
-          "path": "$APPLOG/**"
-        }
-      ]
-    }
+    "os:default"
   ]
 }

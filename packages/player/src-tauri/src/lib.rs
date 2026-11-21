@@ -1,12 +1,17 @@
 pub mod bridge;
 pub mod commands;
 pub mod db;
+#[cfg(not(mobile))]
+pub mod discord;
+#[cfg(mobile)]
+#[path = "discord_mobile.rs"]
 pub mod discord;
 pub mod history;
 pub mod http;
 pub mod http_api;
 pub mod logging;
 pub mod mcp;
+#[cfg(not(mobile))]
 pub mod media_controls;
 pub mod mpd;
 pub mod net;
@@ -17,6 +22,10 @@ pub mod stream_server;
 #[cfg(windows)]
 mod win_mixer;
 pub mod ytdlp;
+#[cfg(not(mobile))]
+pub mod ytdlp_setup;
+#[cfg(mobile)]
+#[path = "ytdlp_setup_mobile.rs"]
 pub mod ytdlp_setup;
 pub mod ytdlp_verify;
 
@@ -94,7 +103,7 @@ pub fn run() {
 
     let specta_builder = specta_builder();
 
-    #[cfg(debug_assertions)]
+    #[cfg(all(debug_assertions, not(mobile)))]
     specta_builder
         .export(
             typescript_export_config(),
@@ -105,23 +114,26 @@ pub fn run() {
         )
         .expect("failed to export typescript bindings");
 
-    let mut builder = tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_upload::init())
-        .plugin(
+        .plugin(setup::log_plugin());
+
+    #[cfg(not(mobile))]
+    let mut builder = builder.plugin(
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(
                     tauri_plugin_window_state::StateFlags::all()
                         .difference(tauri_plugin_window_state::StateFlags::VISIBLE),
                 )
                 .build(),
-        )
-        .plugin(setup::log_plugin());
+        );
 
+    #[cfg(not(mobile))]
     if !is_flatpak {
         builder = builder
             .plugin(tauri_plugin_updater::Builder::new().build())
@@ -137,6 +149,7 @@ pub fn run() {
             }
             logging::mark_startup_complete();
             bridge::init_bridge(app.handle().clone());
+            #[cfg(not(mobile))]
             media_controls::init_media_controls(app.handle().clone());
             mcp::init_mcp(app.handle().clone());
             mpd::init_mpd(app.handle().clone());

@@ -1,5 +1,6 @@
 import { useCanGoBack, useRouter } from '@tanstack/react-router';
 import { FC } from 'react';
+import { isMobilePlatform } from '../utils/isMobilePlatform';
 
 import {
   Tooltip,
@@ -45,11 +46,11 @@ export const ConnectedTopBar: FC = () => {
           canGoBack={canGoBack}
           canGoForward={canGoForward}
         />
-        <UpdateBadge />
+        {!isMobilePlatform() && <UpdateBadge />}
       </div>
       <SearchBox />
       <div className="flex flex-row items-center justify-end gap-2">
-        <JamQrCodeButton />
+        {!isMobilePlatform() && <JamQrCodeButton />}
         <ConnectedThemeController />
       </div>
     </TopBar>

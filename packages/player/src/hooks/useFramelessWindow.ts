@@ -1,3 +1,4 @@
+import { isMobilePlatform } from '../utils/isMobilePlatform';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect } from 'react';
 
@@ -8,6 +9,7 @@ export const useFramelessWindow = () => {
   const [customTitleBar] = useCoreSetting<boolean>('appearance.customTitleBar');
 
   useEffect(() => {
+    if (isMobilePlatform()) return;
     const window = getCurrentWindow();
 
     if (customTitleBar) {
@@ -23,5 +25,5 @@ export const useFramelessWindow = () => {
     }
   }, [frameless, customTitleBar]);
 
-  return Boolean(frameless);
+  return !isMobilePlatform() && Boolean(frameless);
 };

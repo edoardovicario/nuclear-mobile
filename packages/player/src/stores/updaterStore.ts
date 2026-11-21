@@ -1,3 +1,4 @@
+import { isMobilePlatform } from '../utils/isMobilePlatform';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check, type Update } from '@tauri-apps/plugin-updater';
 import { create } from 'zustand';
@@ -34,6 +35,7 @@ export const useUpdaterStore = create<UpdaterState>((set, get) => ({
   error: null,
 
   checkForUpdate: async () => {
+    if (isMobilePlatform()) return;
     const checkEnabled = getSetting('core.updates.checkForUpdates');
     if (checkEnabled === false) {
       return;
@@ -108,6 +110,7 @@ export const useUpdaterStore = create<UpdaterState>((set, get) => ({
   },
 
   restartToUpdate: async () => {
+    if (isMobilePlatform()) return;
     try {
       await relaunch();
     } catch (error) {
