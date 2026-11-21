@@ -1,0 +1,10 @@
+{
+  "identifier": "mobile-main",
+  "description": "Minimal permissions for the mobile player",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default"
+  ]
+}
